@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="/site_media/jquery/js/jquery-1.7.2.min.js">
+    </script>
+    <style media="screen" type="text/css">
+        form {
+            width:100%;
+        }
+        form select {
+            width:50%;
+            margin : 5px;
+        }
+        form select#samples {
+            height : 200px;
+        }
+        body {
+            font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            }
+            .center { margin-left:auto; margin-right:auto; }
+    </style>
+</head> 
+<body>
+<script type="text/javascript"> 
+    $( document ).ready(function() {
+        console.log("ion-wisecondor instance is ready");
+        // fill init form 
+        $.ajax({
+            type:"GET",
+            url:"/rundb/api/v1/results/"+ TB_result+ "/",
+            contentType:"application/json;charset=utf-8",
+            success: function(data) {
+                expUrl = data["experiment"];
+                console.debug(expUrl);
+                $.ajax({
+                    type:"GET",
+                    url: expUrl,
+                    contentType:"application/json;charset=utf-8",
+                    success : function(data) {
+                        // Get All Samples into select input 
+                        console.debug("experiment");
+                        var array ={};
+                        console.debug(data["eas_set"])	
+                        $.each(data["eas_set"][0]["barcodedSamples"], function(index,value){
+                            console.debug(index+":"+value["barcodes"][0]);			
+                            var option = new Option(index, value["barcodes"][0]);
+                            $("#samples").append(option);
+                        });
+                    }
+                });
+            }
+        });
+        
+	// Post Button action 
+	$("#postButton").click(function() {
+            obj = {} 
+            obj["items"] = []
+            $("#samples :selected").each(function(i, element) {
+                var value = $(element).val();
+                var name  = $(element).text();
+                obj["items"].push({"sample": name, "barcode" : value})
+            });
+            obj["count"] = obj["items"].length
+            console.debug(obj)
+            pluginAPIJSON = { "plugin" : [TB_plugin.fields.name], "pluginconfig" : obj };
+            pluginAPIJSON = JSON.stringify(pluginAPIJSON);
+            pluginURL = "/rundb/api/v1/results/" + TB_result + "/plugin/";
+            $.ajax({
+                type: 'POST',
+                url: pluginURL,
+                async: false,
+                contentType: "application/json; charset=utf-8",
+                data: pluginAPIJSON,
+                dataType: "json",
+                success: function(data) {
+                    console.debug("post successed");
+                    $("#json_result").html('<div style="text-align:center;"><img src="/site_media/jquery/colorbox/images/loading.gif" alt="Running Plugin" style="float:center    "></img><p>Running the Plugin...</p></div>');
+                    setTimeout("parent.$.fn.colorbox.close()",200);
+                }
+            });
+	});
+    });
+
+</script>
+    <div style="text-align:center">
+        <h1>Torrent NIPT plugin</h1>
+    </div>
+    <div>
+        <b>Select BAM file(s) to analyse:</b>
+        <form id="myform">
+            <select id="samples" name="bamList" multiple></select>
+        </form>
+    </div>
+    <div>
+        <input type="button" id="postButton" value="start">
+    </div>
+</body>
+</html>
