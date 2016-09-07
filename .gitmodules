@@ -1,0 +1,6 @@
+[submodule "wisecondor"]
+	path = wisecondor
+	url = https://github.com/AllanSSX/wisecondor.git
+[submodule "sanefalcon"]
+	path = sanefalcon
+	url = https://github.com/AllanSSX/sanefalcon.git
