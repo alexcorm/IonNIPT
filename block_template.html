@@ -42,7 +42,9 @@
                     <th><span class="help" title="Chromosome 21">chrom 21</span></th>
                     <th><span class="help" title="Chromosome 18">chrom 18</span></th>
                     <th><span class="help" title="Chromosome 13">chrom 13</span></th>
-					<th><span class="help" title="Fetal fraction">Fetal fraction</span></th>
+					<th><span class="help" title="FF defrag">FF defrag</span></th>
+					<th><span class="help" title="FF sanefalcon">FF sanefalcon</span></th>
+					<th><span class="help" title="Sex">Sex</span></th>
                     <th><span class="help" title="Download links">Download Links</span></th>
                 </tr>
             </thead>
@@ -53,7 +55,17 @@
                 <td class="zscore">{{i.s21}}</td>
                 <td class="zscore">{{i.s18}}</td>
                 <td class="zscore">{{i.s13}}</td>
-				<td>{{i.ff}}</td>
+				<td>{{i.ff_defrag}}</td>
+				<td>{{i.ff_sanefalcon}}</td>
+				{% if i.cluster == "BAD" %}
+				<td class="red">{{i.cluster}}</td>
+				{% elif i.cluster == "Boys" and i.sex == "Female" %}
+				<td class="orange">{{i.sex}}</td>
+				{% elif i.cluster == "Girls" and i.sex == "Male" %}
+				<td class="orange">{{i.sex}}</td>
+				{% else %}
+				<td class="green">{{i.sex}}</td>
+				{% endif %}
                 <td style="text-align:center">
                     <a class="btn" href="{{ i.pickle }}">PICKLE</a>
                     <a class="btn" href="{{ i.tested }}">TESTED</a>
