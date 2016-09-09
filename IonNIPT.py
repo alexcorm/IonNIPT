@@ -28,8 +28,13 @@ class IonNIPT(IonPlugin):
 		self.retro = os.path.join(self.pluginDir, 'sanefalcon/retro.py')
 		self.getProfile = os.path.join(self.pluginDir, 'sanefalcon/getProfile.py')
 		self.predict = os.path.join(self.pluginDir, 'sanefalcon/predict.sh')
+		self.defrag = os.path.join(self.pluginDir, 'wisecondor/defrag.py')
 		self.nuclTrack = os.path.join(self.pluginDir, 'data')
 		self.trainModel = os.path.join(self.pluginDir, 'data/trainModel-brest.model')
+		self.male = os.path.join(self.pluginDir, 'data/male-defrag')
+		self.female = os.path.join(self.pluginDir, 'data/female-defrag')
+		self.sf = 0.688334125062
+		self.percYonMales = 0.00146939199267
 		
 		# ================ GET INSTANCE PARAMETERS AND STORE THEM IN A LIST 
 		fileCount = int(os.environ["PLUGINCONFIG__COUNT"])
@@ -56,26 +61,29 @@ class IonNIPT(IonPlugin):
 		# ================ LOOP ON EACH FILES AND START COMPUTATION 
 		for item in files:
 			print "Analyse {sample}".format(sample=item["sample"])
+			
+			# ======= Wisecondor
+			
 			print "*** Detect trisomy using Wisecondor ***"
 			print "Get pickle"
 			# pickle
 			cmd_pickle = "samtools view {bam} -q 1 | python {pluginDir}/wisecondor/consam.py -outfile {outputDir}/{sample}_{date}.pickle".format(bam=item["input"], pluginDir = self.pluginDir, outputDir = self.outputDir, sample = item["sample"], date= self.date)
-			self.jobLauncher(cmd_pickle)
+			jobLauncher(cmd_pickle)
 			
 			print "Make GC correction"
 			# gcc
 			cmd_gcc = "python {pluginDir}/wisecondor/gcc.py  {outputDir}/{sample}_{date}.pickle {pluginDir}/data/hg19.gccount {outputDir}/{sample}_{date}.gcc".format(pluginDir = self.pluginDir, outputDir = self.outputDir, sample = item["sample"], date= self.date)
-			self.jobLauncher(cmd_gcc)
+			jobLauncher(cmd_gcc)
 			
 			print "Test"
 			# tested
 			cmd_tested = "python {pluginDir}/wisecondor/test.py {outputDir}/{sample}_{date}.gcc {pluginDir}/data/reftable {outputDir}/{sample}_{date}.tested".format(pluginDir = self.pluginDir, outputDir = self.outputDir, sample = item["sample"], date= self.date)
-			self.jobLauncher(cmd_tested)
+			jobLauncher(cmd_tested)
 			
 			print "Generate the pdf file"
 			# pdf
 			cmd_pdf = "python {pluginDir}/wisecondor/plot.py {outputDir}/{sample}_{date}.tested  {outputDir}/{sample}_{date}".format(pluginDir = self.pluginDir, outputDir = self.outputDir, sample = item["sample"], date= self.date)	
-			self.jobLauncher(cmd_pdf)
+			jobLauncher(cmd_pdf)
 			
 			# get score
 			filePath = os.environ["RESULTS_DIR"] + "/" + item["sample"] + "_" + self.date + ".tested"
@@ -83,7 +91,8 @@ class IonNIPT(IonPlugin):
 			item["s18"] = self.scoreOf(filePath, "18")
 			item["s13"] = self.scoreOf(filePath, "13")
 			
-			### Saneflacon
+			# ======= Saneflacon
+			
 			print "*** Get foetal fraction using Sanefalcon ***"
 			
 			# prep folder
@@ -101,13 +110,38 @@ class IonNIPT(IonPlugin):
 			# test FF
 			print "Compute the foetal fraction"
 			cmd_ff = "bash {predict} {trainModel} {barcode_folder}/{barcode}".format(predict=self.predict, trainModel=self.trainModel, barcode_folder=barcode_folder, barcode=item["barcode"])
-			self.jobLauncher(cmd_ff)
+			jobLauncher(cmd_ff)
 			
 			ff = open(os.path.join(barcode_folder, item["barcode"])+'.ff','r')
 			for line in ff:
 				elem = line.split()
 				if elem[0] == 'Fetal':
-					item["ff"] = round(float(elem[2]), 2)
+					item["ff_sanefalcon"] = round(float(elem[2]), 2)
+			
+			# ======= Defrag
+			
+			src_gcc = os.path.join(self.outputDir, item["sample"] + "_" + self.date +".gcc")
+			src_pickle = os.path.join(self.outputDir, item["sample"] + "_" + self.date +".pickle")
+			
+			dest_gcc = os.path.join(barcode_folder, item["barcode"]+'.gcc')
+			dest_pickle = os.path.join(barcode_folder, item["barcode"]+'.pickle')
+			
+			os.symlink(src_gcc, dest_gcc)
+			os.symlink(src_pickle, dest_pickle)
+			
+			cmd_defrag = 'python {defrag} {male} {female} {test} --scalingFactor {sf} --percYonMales {percYmales} {graph}'.format(defrag=self.defrag, male=self.male, female=self.female , test=barcode_folder, sf=self.sf, percYmales=self.percYonMales, graph=item["barcode"])
+			p = subprocess.Popen(cmd_defrag, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+			stdout, stderr = p.communicate()
+			if p.returncode == 0:
+				for line in stdout.splitlines():
+					if line.startswith('Ion'):
+						barcode, ff, ffWholeY, gender, reads, cluster, percReadsY = line.split()
+						item["ff_defrag"] = round(float(ff), 2)
+						item["sex"] = gender
+						item["cluster"] = cluster
+			else:
+				raise Exception(stderr)
+			
 		
 		# ================ GENERATE RESULTS HTML FROM DJANGO TEMPLATE SYSTEM
 		settings.configure()
@@ -132,13 +166,13 @@ class IonNIPT(IonPlugin):
 				score = -1
 		return round(score,2)
 	
-	def jobLauncher(self, cmd):
-		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-		stdout, stderr = p.communicate()
-		if p.returncode == 0:
-			print(stdout)
-		else:
-			raise Exception(stderr)
+def jobLauncher(cmd):
+	p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	stdout, stderr = p.communicate()
+	if p.returncode == 0:
+		print(stdout)
+	else:
+		raise Exception(stderr)
 	
 def getReadStarts(bam, id, output, retro): #remove from class, joblib error
 	name = os.path.basename(bam).split('.')[0][:-7]
@@ -151,19 +185,8 @@ def getReadStarts(bam, id, output, retro): #remove from class, joblib error
 	cmd_reverse += "'{print ($4 + length($10) - 1)}' "
 	cmd_reverse += "> {output}/{name}.{id}.start.rev".format(output=output, name=name, id=id)
 	
-	process = subprocess.Popen(cmd_forward, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	stdout, stderr = process.communicate()
-	if process.returncode == 0:
-		pass
-	else:
-		raise Exception(stderr)
-	
-	process = subprocess.Popen(cmd_reverse, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	stdout, stderr = process.communicate()
-	if process.returncode == 0:
-		pass
-	else:
-		raise Exception(stderr)
+	jobLauncher(cmd_forward)
+	jobLauncher(cmd_reverse)
 		
 def getProfiles(readstarts, getProfile, nuclTrak, barcode_folder):
 	name, chr, type, strand = os.path.basename(readstarts).split('.')
@@ -172,37 +195,15 @@ def getProfiles(readstarts, getProfile, nuclTrak, barcode_folder):
 		cmd_0 = "python {getProfile} {nuclTrak}/nuclTrack.{chr} {barcode_folder}/{name}.{chr}.start.fwd 0 {barcode_folder}/{name}.{chr}.fwd".format(getProfile=getProfile, nuclTrak=nuclTrak, chr=chr, name=name, barcode_folder=barcode_folder)
 		cmd_1 = "python {getProfile} {nuclTrak}/nuclTrack.{chr} {barcode_folder}/{name}.{chr}.start.fwd 1 {barcode_folder}/{name}.{chr}.ifwd".format(getProfile=getProfile, nuclTrak=nuclTrak, chr=chr, name=name, barcode_folder=barcode_folder)
 		
-		process = subprocess.Popen(cmd_0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		stdout, stderr = process.communicate()
-		if process.returncode == 0:
-			pass
-		else:
-			raise Exception(stderr)
-		
-		process = subprocess.Popen(cmd_1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		stdout, stderr = process.communicate()
-		if process.returncode == 0:
-			pass
-		else:
-			raise Exception(stderr)
+		jobLauncher(cmd_0)
+		jobLauncher(cmd_1)
 		
 	elif strand == 'rev':
 		cmd_0 = "python {getProfile} {nuclTrak}/nuclTrack.{chr} {barcode_folder}/{name}.{chr}.start.rev 1 {barcode_folder}/{name}.{chr}.rev".format(getProfile=getProfile, nuclTrak=nuclTrak, chr=chr, name=name, barcode_folder=barcode_folder)
 		cmd_1 = "python {getProfile} {nuclTrak}/nuclTrack.{chr} {barcode_folder}/{name}.{chr}.start.rev 0 {barcode_folder}/{name}.{chr}.irev".format(getProfile=getProfile, nuclTrak=nuclTrak, chr=chr, name=name, barcode_folder=barcode_folder)
 		
-		process = subprocess.Popen(cmd_0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		stdout, stderr = process.communicate()
-		if process.returncode == 0:
-			pass
-		else:
-			raise Exception(stderr)
-		
-		process = subprocess.Popen(cmd_1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		stdout, stderr = process.communicate()
-		if process.returncode == 0:
-			pass
-		else:
-			raise Exception(stderr)
+		jobLauncher(cmd_0)
+		jobLauncher(cmd_1)
 	
 if __name__ == "__main__":
   PluginCLI()
