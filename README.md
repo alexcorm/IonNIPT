@@ -1,5 +1,4 @@
 #IonNIPT
-==============
 
 #### ThermoFisher Ion Torrent plugin to detect fetal trisomies and estimate fetal fraction
 
@@ -8,9 +7,9 @@ Tools used from other projects are shown below.
 ![Screenshot](https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/IonNIPT.PNG)
 
 - Python   
---pickle 
---joblib
---scipy
+--pickle   
+--joblib   
+--scipy   
 --sklearn   
 
 ## 2 Installation
