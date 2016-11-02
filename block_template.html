@@ -57,11 +57,9 @@
                 <td class="zscore">{{i.s13}}</td>
 				<td>{{i.ff_defrag}}</td>
 				<td>{{i.ff_sanefalcon}}</td>
-				{% if i.cluster == "BAD" %}
-				<td class="red">{{i.cluster}}</td>
-				{% elif i.cluster == "Boys" and i.sex == "Female" %}
-				<td class="orange">{{i.sex}}</td>
-				{% elif i.cluster == "Girls" and i.sex == "Male" %}
+				{% if i.fiability == 0 %}
+				<td class="red">{{i.sex}}</td>
+				{% elif i.fiability == 1 %}
 				<td class="orange">{{i.sex}}</td>
 				{% else %}
 				<td class="green">{{i.sex}}</td>
@@ -69,6 +67,7 @@
                 <td style="text-align:center">
                     <a class="btn" href="{{ i.pickle }}">PICKLE</a>
                     <a class="btn" href="{{ i.tested }}">TESTED</a>
+					<a class="btn" href="{{ i.nucProf }}">PROFILE</a>
                     <a class="btn  btn-primary " href="{{ i.pdf }}">DOWNLOAD PDF</a>
                 </td>
             </tr>
