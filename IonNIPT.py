@@ -6,6 +6,10 @@ from joblib import Parallel, delayed
 import pickle
 from django.template import Context, Template
 from django.conf import settings
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 class IonNIPT(IonPlugin):
 	""" IonNIPT"""
@@ -55,6 +59,7 @@ class IonNIPT(IonPlugin):
 			item["gcc"] 	= self.urlPlugin + "/" + sample + "_" + self.date +".gcc" 
 			item["tested"] 	= self.urlPlugin + "/" + sample + "_" + self.date +".tested" 
 			item["pdf"] 	= self.urlPlugin + "/" + sample + "_" + self.date +".pdf"
+			item["nucProf"] = self.urlPlugin + "/" + sample + "_nucProf.pdf"
 			
 			files.append(item)
 			
@@ -113,10 +118,15 @@ class IonNIPT(IonPlugin):
 			jobLauncher(cmd_ff)
 			
 			ff = open(os.path.join(barcode_folder, item["barcode"])+'.ff','r')
+			graph = os.path.join(self.outputDir, item["sample"])+"_nucProf.pdf"
 			for line in ff:
 				elem = line.split()
 				if elem[0] == 'Fetal':
 					item["ff_sanefalcon"] = round(float(elem[2]), 2)
+				if elem[0] == 'Nucleosome':
+					nucProfVal = map(float, elem[2:])
+					plotNucProfile(nucProfVal, graph)
+					
 			
 			# ======= Defrag
 			
@@ -136,9 +146,22 @@ class IonNIPT(IonPlugin):
 				for line in stdout.splitlines():
 					if line.startswith('Ion'):
 						barcode, ff, ffWholeY, gender, reads, cluster, percReadsY = line.split()
+						
 						item["ff_defrag"] = round(float(ff), 2)
 						item["sex"] = gender
 						item["cluster"] = cluster
+						item["fiability"] = 2
+						
+						if cluster == "BAD":
+							item["sex"] = cluster
+							item["fiability"] = 0
+						elif gender == "Male" and cluster == "Girls":
+							item["sex"] = genesYspecificsSexDet(item["input"])
+							item["fiability"] = 1
+						
+						elif gender == "Female" and cluster == "Boys":
+							item["sex"] = genesYspecificsSexDet(item["input"])
+							item["fiability"] = 1
 			else:
 				raise Exception(stderr)
 			
@@ -204,6 +227,69 @@ def getProfiles(readstarts, getProfile, nuclTrak, barcode_folder):
 		
 		jobLauncher(cmd_0)
 		jobLauncher(cmd_1)
+
+def genesYspecificsSexDet(bam):
 	
+	Y = {"HSFY1" : "chrY:20708557-20750849",
+	     #"HSFY2" : "chrY:20893326-20990548",
+	     "BPY2" : "chrY:25119966-25151612",
+	     "BPY2B" : "chrY:26753707-26785354",
+	     "BPY2C" : "chrY:27177048-27208695",
+	     "XKRY " : "chrY:19880860-19889280",
+	     "PRY" : "chrY:24636544-24660784",
+	     "PRY2" : "chrY:24217903-24242154"
+	     }
+	
+	Yl_reads = []
+	Y_reads = []
+	
+	for gene,coord in Y.items():
+		cmd = "samtools view -c {bam} {coord}".format(bam = bam, coord = coord)
+		process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		stdout, stderr = process.communicate()
+		if process.returncode != 0:
+			raise Exception(stderr)
+		else:
+			Yl_reads.append(int(stdout[:-1]))
+	
+	cmd = "samtools view -c {bam} {coord}".format(bam = bam, coord = "chrY")
+	process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	stdout, stderr = process.communicate()
+	if process.returncode != 0:
+		raise Exception(stderr)
+	else:
+		Y_reads.append(int(stdout[:-1]))
+	
+	if int(Y_reads[0]) != 0:
+		percReadsGenes = float(sum(Yl_reads))*100/float(Y_reads[0])
+		if percReadsGenes > 0.06:
+			return "Male"
+		elif percReadsGenes < 0.03:
+			return "Female"
+		else:
+			return "Undetermined"
+	else:
+		return "Undetermined"
+
+def plotNucProfile(values, output):
+	plt.figure(figsize=(16, 4))
+	
+	plt.plot(values)
+	
+	plt.xlim([0,292])
+	center = 147-1
+	plt.xticks([0,center-93, center-73,center, center+73,center+93, 292],['\nUpstream','93','73\nStart','0\nCenter','73\nEnd','93','\nDownstream'])
+	plt.axvline(x=center-93, linewidth=1, ls='--', color = 'k')
+	plt.axvline(x=center-73, linewidth=1, ls='--', color = 'k')
+	plt.axvline(x=center, linewidth=1, ls='--', color = 'k')
+	plt.axvline(x=center+73, linewidth=1, ls='--', color = 'k')
+	plt.axvline(x=center+93, linewidth=1, ls='--', color = 'k')
+	
+	plt.title("Nucleosome Profile")
+	plt.xlabel("Nucleosome BP Position")
+	plt.ylabel("Ratio")
+	
+	plt.savefig(output, dpi=400)
+
 if __name__ == "__main__":
   PluginCLI()
