@@ -19,12 +19,15 @@ Simply clone the repository:
 
 `git clone --recursive https://github.com/AllanSSX/IonNIPT.git`
 
-You need to change some variables in IonNIPT.py:
+You need to change some variables in `IonNIPT.py`:
 
 - l.33: path to the trained model (Sanefalcon)
 - l.36: the scaling factor value for Defrag
 - l.113: number of jobs/threads. By default, total amount of cores for the Proton server.
 - l.159 & 163: enable/disable the second module for sex determination. By default, disable.
+
+And just 1 line in `sanefalcon/predict.sh`:
+- l.2: path to predict.py
 
 Moreover, you need to traine Sanefalcon and Defrag on your data and push the results into `data/`.  
 See Sanefalcon and Wisecondor manual for further details.
