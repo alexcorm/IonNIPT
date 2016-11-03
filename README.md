@@ -23,7 +23,42 @@ You need to change some variables in IonNIPT.py:
 
 - l.33: path to the trained model (Sanefalcon)
 - l.36: the scaling factor value for Defrag
-- l.37: the percYonMales value also for Defrag
+- l.113: number of jobs/threads. By default, total amount of cores for the Proton server.
+- l.159 & 163: enable/disable the second module for sex determination. By default, disable.
 
-Moreover, you need to traine Sanefalcon and Defrag on your data and push the results into data/ (Sanefalcon: nucleosome track, train model; Wisecondor: gcccount, reftable, and gcc/pickle for males and females).   
+Moreover, you need to traine Sanefalcon and Defrag on your data and push the results into `data/`.  
 See Sanefalcon and Wisecondor manual for further details.
+
+Structuration of the data folder:
+```
+data/  
+|__ female-defrag  
+|   |__ GRO-51_BRE00067.gcc  
+|   |__ GRO-51_BRE00067.pickle  
+|   |__ ...
+|   |__ GRO-71_BRE00127.gcc  
+|   |__ GRO-71_BRE00127.pickle  
+_ hg19.gccount  
+_ male-defrag  
+|   _ GRO-51_BRE00063.gcc  
+|   _ GRO-51_BRE00063.pickle  
+|   _ ...
+|   _ GRO-72_BRE00128.gcc  
+|   _ GRO-72_BRE00128.pickle  
+|_ nuclTrack.1  
+|_ nuclTrack.10  
+|_ ...
+|_ nuclTrack.8  
+|_ nuclTrack.9  
+|_ reftable  
+|_ trainModel.model
+```
+
+
+## 3 - Module for sex determination
+
+The aim of the function `genesYspecificsSexDet()` is to perform a second analysis to complete the Defrag test for sex determination is case of conflict between the sex cluster and the gender. It will calculate the percentage of reads for a subset of Y genes, specifics to the male (i.e. without orthologs in autosomes or in X). To activate the function, you need to uncomment l.159 & 163 from `IonNIPT.py` and fixe a threshold l.265 & 267 to determine the correct sex.
+
+To identify these treshold values, simply run `coverageYspecificGenes.py` on your data for which the sex is already know and plot the result as shown in the next figure.
+
+<img src="https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/MSY.PNG" width="48">
