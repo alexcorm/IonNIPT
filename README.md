@@ -32,26 +32,26 @@ See Sanefalcon and Wisecondor manual for further details.
 Structuration of the data folder:
 ```
 data/  
-|__ female-defrag  
+|__ female-defrag/  
 |   |__ GRO-51_BRE00067.gcc  
 |   |__ GRO-51_BRE00067.pickle  
 |   |__ ...
 |   |__ GRO-71_BRE00127.gcc  
 |   |__ GRO-71_BRE00127.pickle  
-_ hg19.gccount  
-_ male-defrag  
-|   _ GRO-51_BRE00063.gcc  
-|   _ GRO-51_BRE00063.pickle  
-|   _ ...
-|   _ GRO-72_BRE00128.gcc  
-|   _ GRO-72_BRE00128.pickle  
-|_ nuclTrack.1  
-|_ nuclTrack.10  
-|_ ...
-|_ nuclTrack.8  
-|_ nuclTrack.9  
-|_ reftable  
-|_ trainModel.model
+|__ hg19.gccount  
+|__ male-defrag/  
+|   |__ GRO-51_BRE00063.gcc  
+|   |__ GRO-51_BRE00063.pickle  
+|   |__ ...
+|   |__ GRO-72_BRE00128.gcc  
+|   |__ GRO-72_BRE00128.pickle  
+|__ nuclTrack.1  
+|__ nuclTrack.10  
+|__ ...
+|__ nuclTrack.8  
+|__ nuclTrack.9  
+|__ reftable  
+|__ trainModel.model
 ```
 
 
@@ -61,4 +61,4 @@ The aim of the function `genesYspecificsSexDet()` is to perform a second analysi
 
 To identify these treshold values, simply run `coverageYspecificGenes.py` on your data for which the sex is already know and plot the result as shown in the next figure.
 
-<img src="https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/MSY.PNG" width="48">
+<img src="https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/MSY.PNG" width="256">
