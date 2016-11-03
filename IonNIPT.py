@@ -34,7 +34,7 @@ class IonNIPT(IonPlugin):
 		self.predict = os.path.join(self.pluginDir, 'sanefalcon/predict.sh')
 		self.defrag = os.path.join(self.pluginDir, 'wisecondor/defrag.py')
 		self.nuclTrack = os.path.join(self.pluginDir, 'data')
-		self.trainModel = os.path.join(self.pluginDir, 'data/trainModel-brest.model')
+		self.trainModel = os.path.join(self.pluginDir, 'data/trainModel_BorBreCoc_defrag-rassf1.model')
 		self.male = os.path.join(self.pluginDir, 'data/male-defrag')
 		self.female = os.path.join(self.pluginDir, 'data/female-defrag')
 		self.sf = 0.688334125062
@@ -156,11 +156,11 @@ class IonNIPT(IonPlugin):
 							item["sex"] = cluster
 							item["fiability"] = 0
 						elif gender == "Male" and cluster == "Girls":
-							item["sex"] = genesYspecificsSexDet(item["input"])
+							# item["sex"] = genesYspecificsSexDet(item["input"])
 							item["fiability"] = 1
 						
 						elif gender == "Female" and cluster == "Boys":
-							item["sex"] = genesYspecificsSexDet(item["input"])
+							# item["sex"] = genesYspecificsSexDet(item["input"])
 							item["fiability"] = 1
 			else:
 				raise Exception(stderr)
