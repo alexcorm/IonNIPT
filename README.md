@@ -61,4 +61,4 @@ The aim of the function `genesYspecificsSexDet()` is to perform a second analysi
 
 To identify these treshold values, simply run `coverageYspecificGenes.py` on your data for which the sex is already know and plot the result as shown in the next figure.
 
-<img src="https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/MSY.PNG" align="middle" width="256">
+<p align="center"><img src="https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/MSY.PNG" width="256"></p>
