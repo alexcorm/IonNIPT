@@ -26,8 +26,12 @@ You need to change some variables in `IonNIPT.py`:
 - l.113: number of jobs/threads. By default, total amount of cores for the Proton server.
 - l.159 & 163: enable/disable the second module for sex determination. By default, disable.
 
-And just 1 line in `sanefalcon/predict.sh`:
+In `sanefalcon/predict.sh`:
 - l.2: path to predict.py
+
+And if you using Torrent Server >= 5.2 and Ubuntu 14.04, please add the following correction in `wisecondor/test.py`:   
+- l.49: `if len(reference) == 0 or stddev == 0:`   
+
 
 Moreover, you need to traine Sanefalcon and Defrag on your data and push the results into `data/`.  
 See Sanefalcon and Wisecondor manual for further details.
