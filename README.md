@@ -1,4 +1,4 @@
-#IonNIPT
+# IonNIPT
 
 #### ThermoFisher Ion Torrent plugin to detect fetal trisomies and estimate fetal fraction
 
