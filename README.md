@@ -19,11 +19,15 @@ Simply clone the repository:
 
 `git clone --recursive https://github.com/AllanSSX/IonNIPT.git`
 
+### External members
+
+/!\ The first step is to train Defrag and Sanefalcon. Please, follow the documentation of each tool.
+
 You need to change some variables in `IonNIPT.py`:
 
-- l.33: path to the trained model (Sanefalcon)
-- l.36: the scaling factor value for Defrag
-- l.113: number of jobs/threads. By default, total amount of cores for the Proton server.
+- l.37: path to the trained model (Sanefalcon)
+- l.40: the scaling factor value for Defrag
+- l.109/113: number of jobs/threads. By default, total amount of cores for the Proton server.
 - l.159 & 163: enable/disable the second module for sex determination. By default, disable.
 
 In `sanefalcon/predict.sh`:
@@ -60,7 +64,9 @@ data/
 |__ reftable  
 |__ trainModel.model
 ```
+### Members of the French Consortium for NIPT
 
+Just contact me, I will send you all the data
 
 ## 3 - Module for sex determination
 
