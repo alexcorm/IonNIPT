@@ -4,6 +4,10 @@
 
 ![Screenshot](https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/IonNIPT.PNG)
 
+#### Overview
+
+![Screenshot](https://raw.githubusercontent.com/AllanSSX/IonNIPT/master/workflow.png)
+
 ## 1 Tools and dependencies
 Tools used from other projects are shown below.
 
@@ -23,7 +27,7 @@ Simply clone the repository:
 
 /!\ The first step is to train Defrag and Sanefalcon. Please, follow the documentation of each tool.
 
-You need to change some variables in `IonNIPT.py`:
+After that, you need to change some variables in `IonNIPT.py`:
 
 - l.37: path to the trained model (Sanefalcon)
 - l.40: the scaling factor value for Defrag
